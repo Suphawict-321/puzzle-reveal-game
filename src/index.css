@@ -1,0 +1,50 @@
+@import "@fontsource/prompt/300.css";
+@import "@fontsource/prompt/400.css";
+@import "@fontsource/prompt/600.css";
+@import "@fontsource/prompt/800.css";
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Prompt", ui-sans-serif, system-ui, sans-serif;
+  --color-ink: #0b0720;
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: #f4f1ff;
+  background-color: #0b0720;
+  background-image:
+    radial-gradient(60rem 40rem at 10% -10%, rgba(139, 92, 246, 0.35), transparent 60%),
+    radial-gradient(50rem 40rem at 100% 0%, rgba(236, 72, 153, 0.22), transparent 60%),
+    radial-gradient(50rem 40rem at 50% 120%, rgba(34, 211, 238, 0.16), transparent 60%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(14px);
+}
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  border-radius: 9999px; font-weight: 600; cursor: pointer;
+  transition: transform .15s ease, filter .15s ease, background .15s ease, opacity .15s;
+  user-select: none;
+}
+.btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); }
+.btn:active:not(:disabled) { transform: translateY(0) scale(.98); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-primary { background: linear-gradient(135deg, #8b5cf6, #ec4899); box-shadow: 0 10px 30px -8px rgba(236, 72, 153, .55); color: #fff; }
+.btn-ghost { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); color: #e9e4ff; }
+
+.piece { cursor: pointer; }
+.piece path { transition: filter .15s ease; }
+.piece:hover path { filter: brightness(1.35) saturate(1.1); }
+
+input[type="range"] { accent-color: #c084fc; }
+::selection { background: #a855f7; color: white; }
