@@ -40,6 +40,7 @@ interface Props {
 }
 
 const W = 1000
+const EASE = [0.22, 1, 0.36, 1] as const
 
 export default function Board({ puzzle, width, height, revealed, wave, showNumbers, onReveal }: Props) {
   const H = Math.round((W * puzzle.h) / puzzle.w)
@@ -56,21 +57,10 @@ export default function Board({ puzzle, width, height, revealed, wave, showNumbe
       style={{
         width,
         height,
-        boxShadow: '0 0 0 1px rgba(255,255,255,.14), 0 30px 80px -20px rgba(168,85,247,.55), 0 10px 40px rgba(0,0,0,.5)',
+        boxShadow: '0 0 0 1px rgb(237 237 237 / 0.14), 0 24px 60px -24px rgb(0 0 0 / 0.8)',
       }}
     >
       <svg viewBox={`0 0 ${W} ${H}`} width={width} height={height} className="block select-none">
-        <defs>
-          <linearGradient id="cover" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={W} y2={H}>
-            <stop offset="0" stopColor="#6d28d9" />
-            <stop offset="0.5" stopColor="#c026d3" />
-            <stop offset="1" stopColor="#f43f5e" />
-          </linearGradient>
-          <linearGradient id="sheen" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={H}>
-            <stop offset="0" stopColor="#fff" stopOpacity="0.22" />
-            <stop offset="1" stopColor="#fff" stopOpacity="0" />
-          </linearGradient>
-        </defs>
         <image href={puzzle.url} x="0" y="0" width={W} height={H} preserveAspectRatio="none" />
         {pieces.map((p) => {
           const open = revealed.has(p.index)
@@ -79,23 +69,33 @@ export default function Board({ puzzle, width, height, revealed, wave, showNumbe
             <motion.g
               key={p.index}
               className={open ? undefined : 'piece'}
+              role={open ? undefined : 'button'}
+              tabIndex={open ? -1 : 0}
+              aria-label={open ? undefined : `เปิดชิ้นที่ ${p.index + 1}`}
+              aria-hidden={open || undefined}
               style={{ transformBox: 'fill-box', transformOrigin: 'center', pointerEvents: open ? 'none' : 'auto' }}
               initial={false}
               animate={open ? { opacity: 0, scale: 1.35 } : { opacity: 1, scale: 1 }}
-              transition={{ duration: open ? 0.5 : 0.25, delay: open && wave ? dist * 0.9 : 0, ease: 'easeOut' }}
+              transition={{ duration: open ? 0.5 : 0.25, delay: open && wave ? dist * 0.9 : 0, ease: EASE }}
               onClick={() => onReveal(p.index)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  onReveal(p.index)
+                }
+              }}
             >
-              <path d={p.d} fill="url(#cover)" stroke="rgba(255,255,255,.55)" strokeWidth="2.5" strokeLinejoin="round" />
-              <path d={p.d} fill="url(#sheen)" stroke="none" pointerEvents="none" />
+              <path className="cover" d={p.d} />
               {showNumbers && (
                 <text
+                  className="num"
                   x={p.cx}
                   y={p.cy}
                   textAnchor="middle"
                   dominantBaseline="central"
                   fontSize={fontSize}
-                  fontWeight="600"
-                  fill="rgba(255,255,255,.55)"
+                  fontWeight="500"
+                  fontFamily="'JetBrains Mono', ui-monospace, monospace"
                   pointerEvents="none"
                 >
                   {p.index + 1}

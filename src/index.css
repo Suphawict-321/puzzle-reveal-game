@@ -1,12 +1,34 @@
-@import "@fontsource/prompt/300.css";
 @import "@fontsource/prompt/400.css";
-@import "@fontsource/prompt/600.css";
-@import "@fontsource/prompt/800.css";
+@import "@fontsource/prompt/500.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Prompt", ui-sans-serif, system-ui, sans-serif;
-  --color-ink: #0b0720;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  /* พื้นผิว: กราไฟต์เป็นกลาง */
+  --color-deep: #0f0f10;
+  --color-page: #141415;
+  --color-card: #19191b;
+  --color-raised: #232325;
+  --color-piece: #2a2a2d;
+  --color-line: rgb(237 237 237 / 0.08);
+  --color-line-strong: rgb(237 237 237 / 0.16);
+
+  /* ตัวหนังสือ 3 บทบาท */
+  --color-fg: #ededed;
+  --color-fg2: #a1a1a6;
+  --color-fg3: #85858b;
+
+  /* accent เดียว: อำพันแบบตั๋ว/แสตมป์ */
+  --color-accent: #f0b44c;
+  --color-accent-ink: #1a1405;
+
+  --color-danger: #e5484d;
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html, body, #root { height: 100%; }
@@ -14,37 +36,56 @@ html, body, #root { height: 100%; }
 body {
   margin: 0;
   font-family: var(--font-sans);
-  color: #f4f1ff;
-  background-color: #0b0720;
-  background-image:
-    radial-gradient(60rem 40rem at 10% -10%, rgba(139, 92, 246, 0.35), transparent 60%),
-    radial-gradient(50rem 40rem at 100% 0%, rgba(236, 72, 153, 0.22), transparent 60%),
-    radial-gradient(50rem 40rem at 50% 120%, rgba(34, 211, 238, 0.16), transparent 60%);
-  background-attachment: fixed;
+  color: var(--color-fg);
+  background: var(--color-page);
   -webkit-font-smoothing: antialiased;
 }
 
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(14px);
-}
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+::selection { background: var(--color-accent); color: var(--color-accent-ink); }
+input[type="range"] { accent-color: var(--color-accent); }
 
+/* ปุ่ม */
 .btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
-  border-radius: 9999px; font-weight: 600; cursor: pointer;
-  transition: transform .15s ease, filter .15s ease, background .15s ease, opacity .15s;
-  user-select: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: 10px; font-weight: 500; cursor: pointer; user-select: none;
+  transition:
+    color 150ms var(--ease-soft),
+    background-color 150ms var(--ease-soft),
+    border-color 150ms var(--ease-soft),
+    opacity 150ms var(--ease-soft),
+    transform 150ms var(--ease-soft);
 }
-.btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); }
-.btn:active:not(:disabled) { transform: translateY(0) scale(.98); }
-.btn:disabled { opacity: .4; cursor: not-allowed; }
-.btn-primary { background: linear-gradient(135deg, #8b5cf6, #ec4899); box-shadow: 0 10px 30px -8px rgba(236, 72, 153, .55); color: #fff; }
-.btn-ghost { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); color: #e9e4ff; }
+.btn:active:not(:disabled) { transform: scale(0.98); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: var(--color-accent); color: var(--color-accent-ink); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.28); }
+.btn-primary:hover:not(:disabled) { background: #f6c46a; }
+.btn-ghost { background: var(--color-raised); border: 1px solid var(--color-line-strong); color: var(--color-fg); }
+.btn-ghost:hover:not(:disabled) { background: #2c2c2f; }
 
+/* พื้นผิวการ์ด */
+.surface { background: var(--color-card); border: 1px solid var(--color-line); }
+
+/* keycap */
+.kbd {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 24px; height: 24px; padding: 0 6px; border-radius: 6px;
+  font-family: var(--font-mono); font-size: 12px; color: var(--color-fg2);
+  background: var(--color-raised); border: 1px solid var(--color-line-strong);
+  box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.35);
+}
+
+/* ชิ้นจิ๊กซอ: ไม่ใช้กรอบ outline ของเบราว์เซอร์ (วาดเป็นสี่เหลี่ยมทับรูป) ใช้ขอบของชิ้นเองแทน */
+svg g:focus, svg g:focus-visible { outline: none; }
 .piece { cursor: pointer; }
-.piece path { transition: filter .15s ease; }
-.piece:hover path { filter: brightness(1.35) saturate(1.1); }
-
-input[type="range"] { accent-color: #c084fc; }
-::selection { background: #a855f7; color: white; }
+.piece .cover {
+  fill: var(--color-piece);
+  stroke: rgb(237 237 237 / 0.2);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  transition: fill 150ms var(--ease-soft);
+}
+.piece .num { fill: var(--color-fg2); transition: fill 150ms var(--ease-soft); }
+.piece:hover .cover, .piece:focus-visible .cover { fill: #36363a; }
+.piece:hover .num, .piece:focus-visible .num { fill: var(--color-fg); }
+.piece:focus-visible .cover { stroke: var(--color-accent); stroke-width: 4; }

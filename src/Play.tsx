@@ -1,5 +1,6 @@
 import confetti from 'canvas-confetti'
 import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Eye, Flag, Hash, Maximize, RotateCcw } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Board, { useFit } from './Board'
 import { gridFor } from './jigsaw'
@@ -11,15 +12,25 @@ interface Props {
   onExit: () => void
 }
 
+const EASE = [0.22, 1, 0.36, 1] as const
+const Num = ({ children }: { children: React.ReactNode }) => (
+  <span className="font-mono tabular-nums">{children}</span>
+)
+
 function celebrate() {
   const end = Date.now() + 900
-  const colors = ['#8b5cf6', '#ec4899', '#fbbf24', '#22d3ee', '#ffffff']
+  const colors = ['#f0b44c', '#ffd98a', '#ededed', '#a1a1a6']
   const frame = () => {
     confetti({ particleCount: 6, angle: 60, spread: 65, origin: { x: 0, y: 0.75 }, colors })
     confetti({ particleCount: 6, angle: 120, spread: 65, origin: { x: 1, y: 0.75 }, colors })
     if (Date.now() < end) requestAnimationFrame(frame)
   }
   frame()
+}
+
+function toggleFullscreen() {
+  if (document.fullscreenElement) document.exitFullscreen()
+  else document.documentElement.requestFullscreen?.().catch(() => {})
 }
 
 export default function Play({ puzzles, startIndex, onExit }: Props) {
@@ -84,6 +95,8 @@ export default function Play({ puzzles, startIndex, onExit }: Props) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // ชิ้นจิ๊กซอที่โฟกัสอยู่จัดการ Enter/Space ของตัวเอง
+      if ((e.target as Element | null)?.closest?.('.piece')) return
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault()
         primary()
@@ -99,41 +112,45 @@ export default function Play({ puzzles, startIndex, onExit }: Props) {
   const doneCount = puzzles.filter((q) => prog[q.id]?.done).length
 
   return (
-    <div className="flex h-full flex-col px-4 pb-4 pt-3 sm:px-8">
+    <div className="flex h-full flex-col px-6 pb-4 pt-4 sm:px-8">
       {/* แถบบน */}
-      <div className="flex items-center justify-between gap-3">
-        <button className="btn btn-ghost px-4 py-2 text-sm" onClick={onExit}>
-          ← ตั้งค่า
-        </button>
-        <div className="text-center">
-          <div className="text-sm text-violet-200/60">
-            ภาพที่ <b className="text-lg text-white">{idx + 1}</b> / {puzzles.length}
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button
-            className="btn btn-ghost px-3 py-2 text-sm"
-            onClick={() => setShowNumbers((v) => !v)}
-            title="แสดง/ซ่อนเลขชิ้น (N)"
-          >
-            #{showNumbers ? '' : '̸'}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <div>
+          <button className="btn btn-ghost h-10 gap-2 px-3 text-sm" onClick={onExit}>
+            <ArrowLeft size={16} strokeWidth={1.5} />
+            ตั้งค่า
           </button>
-          <button className="btn btn-ghost px-3 py-2 text-sm" onClick={toggleFullscreen} title="เต็มจอ (F)">
-            ⛶
+        </div>
+        <div className="text-base text-fg2">
+          ภาพที่ <span className="font-mono text-lg tabular-nums text-fg">{idx + 1}</span> /{' '}
+          <Num>{puzzles.length}</Num>
+        </div>
+        <div className="flex justify-end gap-2">
+          <button
+            className={`btn btn-ghost h-10 w-10 ${showNumbers ? 'text-fg' : 'text-fg3'}`}
+            onClick={() => setShowNumbers((v) => !v)}
+            aria-pressed={showNumbers}
+            title="แสดง/ซ่อนเลขชิ้น (N)"
+            aria-label="แสดงหรือซ่อนเลขชิ้น"
+          >
+            <Hash size={16} strokeWidth={1.5} />
+          </button>
+          <button className="btn btn-ghost h-10 w-10" onClick={toggleFullscreen} title="เต็มจอ (F)" aria-label="เต็มจอ">
+            <Maximize size={16} strokeWidth={1.5} />
           </button>
         </div>
       </div>
 
       {/* กระดาน */}
-      <div ref={ref} className="my-3 flex min-h-0 flex-1 items-center justify-center">
+      <div ref={ref} className="my-4 flex min-h-0 flex-1 items-center justify-center">
         {size.w > 0 && (
           <AnimatePresence mode="wait">
             <motion.div
               key={p.id}
-              initial={{ opacity: 0, scale: 0.94, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 1.04 }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: EASE }}
             >
               <Board
                 puzzle={p}
@@ -149,24 +166,32 @@ export default function Play({ puzzles, startIndex, onExit }: Props) {
         )}
       </div>
 
-      {/* คำตอบ */}
-      <div className="flex h-20 items-center justify-center text-center sm:h-24">
+      {/* คำถาม / คำตอบ */}
+      <div className="flex h-32 flex-col items-center justify-center text-center">
         <AnimatePresence mode="wait">
           {entry.done ? (
             <motion.div
               key={p.id + 'a'}
-              initial={{ opacity: 0, scale: 0.7, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ type: 'spring', stiffness: 220, damping: 16, delay: 0.5 }}
-              className="bg-gradient-to-r from-amber-200 via-pink-300 to-violet-300 bg-clip-text text-4xl font-extrabold leading-tight text-transparent sm:text-6xl"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: EASE, delay: 0.5 }}
             >
-              {p.answer || '—'}
+              <div className="text-sm text-fg3">คำตอบ</div>
+              <div className="mt-1 text-4xl font-medium leading-tight tracking-tight text-fg sm:text-6xl">
+                {p.answer || '—'}
+              </div>
             </motion.div>
           ) : (
-            <motion.div key={p.id + 'q'} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div className="text-2xl font-semibold text-violet-100/90 sm:text-3xl">ภาพนี้คืออะไร? ที่ไหน? 🤔</div>
-              <div className="mt-1 text-sm text-violet-200/50">
-                เปิดแล้ว {revealed.size} / {total} ชิ้น
+            <motion.div
+              key={p.id + 'q'}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: EASE }}
+            >
+              <div className="text-3xl font-medium sm:text-4xl">ภาพนี้คืออะไร? ที่ไหน?</div>
+              <div className="mt-2 text-sm text-fg3">
+                เปิดแล้ว <Num>{revealed.size}</Num> / <Num>{total}</Num> ชิ้น
               </div>
             </motion.div>
           )}
@@ -174,41 +199,73 @@ export default function Play({ puzzles, startIndex, onExit }: Props) {
       </div>
 
       {/* ปุ่มควบคุม */}
-      <div className="mt-2 flex items-center justify-center gap-3">
-        <button className="btn btn-ghost h-12 w-12 text-xl" disabled={idx === 0} onClick={() => go(idx - 1)} aria-label="ก่อนหน้า">
-          ‹
+      <div className="flex items-center justify-center gap-3">
+        <button className="btn btn-ghost h-11 w-11" disabled={idx === 0} onClick={() => go(idx - 1)} aria-label="ย้อนไปภาพก่อน">
+          <ChevronLeft size={18} strokeWidth={1.5} />
         </button>
-        <button className="btn btn-ghost px-4 py-3 text-sm" onClick={resetCurrent} disabled={!revealed.size}>
+        <button className="btn btn-ghost h-11 px-4 text-sm" onClick={resetCurrent} disabled={!revealed.size}>
+          <RotateCcw size={16} strokeWidth={1.5} />
           ปิดใหม่
         </button>
-        <button className="btn btn-primary min-w-48 px-8 py-3 text-lg" onClick={primary}>
-          {!entry.done ? '✨ เฉลย' : isLast ? '🏁 จบเกม' : 'ภาพถัดไป →'}
+        <button className="btn btn-primary h-12 min-w-44 px-6 text-lg" onClick={primary}>
+          {!entry.done ? (
+            <>
+              <Eye size={18} strokeWidth={1.5} />
+              เฉลย
+            </>
+          ) : isLast ? (
+            <>
+              <Flag size={18} strokeWidth={1.5} />
+              จบเกม
+            </>
+          ) : (
+            <>
+              ภาพถัดไป
+              <ArrowRight size={18} strokeWidth={1.5} />
+            </>
+          )}
         </button>
-        <button className="btn btn-ghost h-12 w-12 text-xl" disabled={isLast} onClick={() => go(idx + 1)} aria-label="ถัดไป">
-          ›
+        <button className="btn btn-ghost h-11 w-11" disabled={isLast} onClick={() => go(idx + 1)} aria-label="ข้ามไปภาพต่อไป">
+          <ChevronRight size={18} strokeWidth={1.5} />
         </button>
       </div>
 
-      {/* ตัวชี้ความคืบหน้า */}
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
-        {puzzles.map((q, i) => (
-          <button
-            key={q.id}
-            onClick={() => go(i)}
-            aria-label={`ภาพที่ ${i + 1}`}
-            className={`h-2.5 rounded-full transition-all ${
-              i === idx ? 'w-8 bg-gradient-to-r from-violet-400 to-pink-400' : prog[q.id]?.done ? 'w-2.5 bg-emerald-400/80' : 'w-2.5 bg-white/20 hover:bg-white/40'
-            }`}
-          />
-        ))}
-        <span className="ml-2 text-xs text-violet-200/40">เฉลยแล้ว {doneCount}/{puzzles.length}</span>
+      {/* ท้ายจอ: ความคืบหน้า + คีย์ลัด ในแถวเดียว */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-line pt-3 text-[13px] text-fg3">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            {puzzles.map((q, i) => (
+              <button
+                key={q.id}
+                onClick={() => go(i)}
+                aria-label={`ภาพที่ ${i + 1}`}
+                aria-current={i === idx}
+                className={`h-2.5 w-2.5 rounded-full transition-colors duration-150 ${
+                  i === idx ? 'bg-accent' : prog[q.id]?.done ? 'bg-fg2' : 'bg-line-strong hover:bg-fg3'
+                }`}
+              />
+            ))}
+          </div>
+          <span>
+            เฉลยแล้ว <Num>{doneCount}</Num>/<Num>{puzzles.length}</Num>
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <span className="flex items-center gap-1.5">
+            <kbd className="kbd">Space</kbd> เฉลย / ถัดไป
+          </span>
+          <span className="flex items-center gap-1.5">
+            <kbd className="kbd">←</kbd>
+            <kbd className="kbd">→</kbd> เปลี่ยนภาพ
+          </span>
+          <span className="flex items-center gap-1.5">
+            <kbd className="kbd">F</kbd> เต็มจอ
+          </span>
+          <span className="flex items-center gap-1.5">
+            <kbd className="kbd">N</kbd> เลขชิ้น
+          </span>
+        </div>
       </div>
-      <div className="mt-1 text-center text-[11px] text-violet-200/30">Space = เฉลย/ถัดไป · ← → เปลี่ยนภาพ · F เต็มจอ · N เลขชิ้น</div>
     </div>
   )
-}
-
-function toggleFullscreen() {
-  if (document.fullscreenElement) document.exitFullscreen()
-  else document.documentElement.requestFullscreen?.().catch(() => {})
 }

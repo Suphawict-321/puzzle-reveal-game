@@ -34,7 +34,7 @@ async function uploadImages(page: Page, specs: { w: number; h: number; c1: strin
 
 test('เล่นเกมต่อเนื่องหลายรูป: ตั้งค่า → เปิดจิ๊กซอ → เฉลย → ภาพถัดไป → จบเกม', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Puzzle Reveal' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'ตั้งค่าเกม' })).toBeVisible()
 
   // 1) เพิ่ม 3 รูปพร้อมกัน
   await uploadImages(page, [
